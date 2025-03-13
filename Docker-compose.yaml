@@ -1,4 +1,15 @@
 services:
+
+  eureka-server:
+    build:
+      context: ./eureka_server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - eureka-network
+
   order-postgres:
     image: postgres:15-alpine
     container_name: order_postgres_db
@@ -8,11 +19,15 @@ services:
       POSTGRES_DB: orderdb
     ports:
       - "5433:5432"
+    networks:
+      - eureka-network
     volumes:
       - order_pgdata:/var/lib/postgresql/data
 
+
+
+
   order-service:
-    container_name: order-service
     build:
       context: ./order
       dockerfile: Dockerfile
@@ -23,8 +38,11 @@ services:
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: pwd1
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-    ports:
-      - "8080:8080"
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    networks:
+      - eureka-network
+    deploy:
+      replicas: 3
 
   inventory-postgres:
     image: postgres:15-alpine
@@ -35,6 +53,8 @@ services:
       POSTGRES_DB: inventorydb
     ports:
       - "5434:5432"
+    networks:
+      - eureka-network
     volumes:
       - inventory_pgdata:/var/lib/postgresql/data
 
@@ -50,8 +70,11 @@ services:
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: pwd2
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
     ports:
       - "8180:8080"
+    networks:
+      - eureka-network
 
   payment-postgres:
     image: postgres:15-alpine
@@ -64,6 +87,8 @@ services:
       - "5435:5432"
     volumes:
       - payment_pgdata:/var/lib/postgresql/data
+    networks:
+      - eureka-network
 
   payment-service:
     container_name: payment-service
@@ -77,8 +102,11 @@ services:
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: pwd3
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
     ports:
       - "8280:8080"
+    networks:
+      - eureka-network
 
   mongo:
     image: mongo:6.0
@@ -87,6 +115,8 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    networks:
+      - eureka-network
 
   product-service:
     container_name: product-service
@@ -97,11 +127,18 @@ services:
       - mongo
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/productdb
-
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
     ports:
       - "8380:8080"
+    networks:
+      - eureka-network
+
 volumes:
   order_pgdata:
   inventory_pgdata:
   payment_pgdata:
   mongo_data:
+
+networks:
+  eureka-network:
+    driver: bridge

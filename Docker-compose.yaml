@@ -10,6 +10,19 @@ services:
     networks:
       - eureka-network
 
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8085:8085"
+    networks:
+      - eureka-network
+    depends_on:
+      - eureka-server
+
+
   order-postgres:
     image: postgres:15-alpine
     container_name: order_postgres_db

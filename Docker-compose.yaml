@@ -9,6 +9,8 @@ services:
       - "8761:8761"
     networks:
       - eureka-network
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
 
   api-gateway:
     build:
@@ -46,16 +48,19 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - order-postgres
+      - eureka-server
+    container_name: order-service
+    ports:
+      - "8080:8080"
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://order-postgres:5432/orderdb
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: pwd1
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
     networks:
       - eureka-network
-    deploy:
-      replicas: 3
 
   inventory-postgres:
     image: postgres:15-alpine
@@ -79,6 +84,7 @@ services:
     depends_on:
       - inventory-postgres
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://inventory-postgres:5432/inventorydb
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: pwd2
@@ -111,6 +117,7 @@ services:
     depends_on:
       - inventory-postgres
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://payment-postgres:5432/paymentdb
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: pwd3
@@ -139,6 +146,7 @@ services:
     depends_on:
       - mongo
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/productdb
       EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
     ports:

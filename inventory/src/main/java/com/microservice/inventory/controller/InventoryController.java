@@ -30,6 +30,17 @@ public class InventoryController {
         return inventoryService.getInventoryByProductId(productId);
     }
 
+    @GetMapping("/slow")
+    public String slowEndpoint() throws InterruptedException {
+        Thread.sleep(3000); // Simula un retraso
+        return "OK";
+    }
+
+    @GetMapping("/error")
+    public String errorEndpoint() {
+        throw new RuntimeException("Fallo simulado");
+    }
+
     @PatchMapping("/product/{productId}/stock")
     public Mono<Inventory> updateStock(
             @PathVariable UUID productId,

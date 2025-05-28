@@ -1,5 +1,6 @@
 package com.microservice.inventory.controller;
 
+import com.microservice.inventory.dto.InventoryResponseDTO;
 import com.microservice.inventory.exception.InsufficientStockException;
 import com.microservice.inventory.exception.InventoryNotFoundException;
 import com.microservice.inventory.model.Inventory;
@@ -12,7 +13,7 @@ import reactor.core.publisher.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/inventory")
+@RequestMapping("/inventory")
 @RequiredArgsConstructor
 
 public class InventoryController {
@@ -26,8 +27,13 @@ public class InventoryController {
     }
 
     @GetMapping("/product/{productId}")
-    public Mono<Inventory> getInventoryByProductId(@PathVariable UUID productId) {
-        return inventoryService.getInventoryByProductId(productId);
+    public Mono<InventoryResponseDTO> getInventoryByProductId(@PathVariable UUID productId) {
+        return inventoryService.getInventoryByProductId(productId)
+                .map(inventory -> new InventoryResponseDTO(
+                        inventory.getProductId(),
+                        inventory.getQuantity(),
+                        inventory.getLocation()
+                ));
     }
 
     @GetMapping("/slow")

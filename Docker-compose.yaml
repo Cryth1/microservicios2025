@@ -1,165 +1,220 @@
-services:
+  services:
 
-  eureka-server:
-    build:
-      context: ./eureka_server
-      dockerfile: Dockerfile
-    container_name: eureka-server
-    ports:
-      - "8761:8761"
-    networks:
-      - eureka-network
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
+    eureka-server:
+      build:
+        context: ./eureka_server
+        dockerfile: Dockerfile
+      container_name: eureka-server
+      ports:
+        - "8761:8761"
+      networks:
+        - eureka-network
+      environment:
+        SPRING_PROFILES_ACTIVE: docker
 
-  api-gateway:
-    build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
-    container_name: api-gateway
-    ports:
-      - "8085:8085"
-    networks:
-      - eureka-network
-    depends_on:
-      - eureka-server
-
-
-  order-postgres:
-    image: postgres:15-alpine
-    container_name: order_postgres_db
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pwd1
-      POSTGRES_DB: orderdb
-    ports:
-      - "5433:5432"
-    networks:
-      - eureka-network
-    volumes:
-      - order_pgdata:/var/lib/postgresql/data
+    api-gateway:
+      build:
+        context: ./api-gateway
+        dockerfile: Dockerfile
+      container_name: api-gateway
+      ports:
+        - "8085:8085"
+      networks:
+        - eureka-network
+      depends_on:
+        - eureka-server
+        - redis
 
 
+    order-postgres:
+      image: postgres:15-alpine
+      container_name: order_postgres_db
+      environment:
+        POSTGRES_USER: user
+        POSTGRES_PASSWORD: pwd1
+        POSTGRES_DB: orderdb
+      ports:
+        - "5433:5432"
+      networks:
+        - eureka-network
+      volumes:
+        - order_pgdata:/var/lib/postgresql/data
 
 
-  order-service:
-    build:
-      context: ./order
-      dockerfile: Dockerfile
-    depends_on:
-      - order-postgres
-      - eureka-server
-    container_name: order-service
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://order-postgres:5432/orderdb
-      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: pwd1
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-    networks:
-      - eureka-network
 
-  inventory-postgres:
-    image: postgres:15-alpine
-    container_name: inventory_postgres_db
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pwd2
-      POSTGRES_DB: inventorydb
-    ports:
-      - "5434:5432"
-    networks:
-      - eureka-network
-    volumes:
-      - inventory_pgdata:/var/lib/postgresql/data
 
-  inventory-service:
-    container_name: inventory-service
-    build:
-      context: ./inventory
-      dockerfile: Dockerfile
-    depends_on:
-      - inventory-postgres
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://inventory-postgres:5432/inventorydb
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: pwd2
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
-    ports:
-      - "8180:8080"
-    networks:
-      - eureka-network
+    order-service:
+      build:
+        context: ./order
+        dockerfile: Dockerfile
+      depends_on:
+        - order-postgres
+        - eureka-server
+      container_name: order-service
+      ports:
+        - "8080:8080"
+      environment:
+        SPRING_PROFILES_ACTIVE: docker
+        SPRING_DATASOURCE_URL: jdbc:postgresql://order-postgres:5432/orderdb
+        EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+        SPRING_DATASOURCE_USERNAME: user
+        SPRING_DATASOURCE_PASSWORD: pwd1
+        SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      networks:
+        - eureka-network
 
-  payment-postgres:
-    image: postgres:15-alpine
-    container_name: payment_postgres_db
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pwd3
-      POSTGRES_DB: paymentdb
-    ports:
-      - "5435:5432"
-    volumes:
-      - payment_pgdata:/var/lib/postgresql/data
-    networks:
-      - eureka-network
+    inventory-postgres:
+      image: postgres:15-alpine
+      container_name: inventory_postgres_db
+      environment:
+        POSTGRES_USER: user
+        POSTGRES_PASSWORD: pwd2
+        POSTGRES_DB: inventorydb
+      ports:
+        - "5434:5432"
+      networks:
+        - eureka-network
+      volumes:
+        - inventory_pgdata:/var/lib/postgresql/data
 
-  payment-service:
-    container_name: payment-service
-    build:
-      context: ./payment
-      dockerfile: Dockerfile
-    depends_on:
-      - inventory-postgres
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://payment-postgres:5432/paymentdb
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: pwd3
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
-    ports:
-      - "8280:8080"
-    networks:
-      - eureka-network
+    inventory-service:
+      container_name: inventory-service
+      build:
+        context: ./inventory
+        dockerfile: Dockerfile
+      depends_on:
+        - inventory-postgres
+      environment:
+        SPRING_PROFILES_ACTIVE: docker
+        SPRING_DATASOURCE_URL: jdbc:postgresql://inventory-postgres:5432/inventorydb
+        SPRING_DATASOURCE_USERNAME: user
+        SPRING_DATASOURCE_PASSWORD: pwd2
+        SPRING_JPA_HIBERNATE_DDL_AUTO: update
+        EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+      ports:
+        - "8180:8080"
+      networks:
+        - eureka-network
 
-  mongo:
-    image: mongo:6.0
-    container_name: mongo_db
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-    networks:
-      - eureka-network
+    payment-postgres:
+      image: postgres:15-alpine
+      container_name: payment_postgres_db
+      environment:
+        POSTGRES_USER: user
+        POSTGRES_PASSWORD: pwd3
+        POSTGRES_DB: paymentdb
+      ports:
+        - "5435:5432"
+      volumes:
+        - payment_pgdata:/var/lib/postgresql/data
+      networks:
+        - eureka-network
 
-  product-service:
-    container_name: product-service
-    build:
-      context: ./product
-      dockerfile: Dockerfile
-    depends_on:
-      - mongo
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/productdb
-      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
-    ports:
-      - "8380:8080"
-    networks:
-      - eureka-network
+    payment-service:
+      container_name: payment-service
+      build:
+        context: ./payment
+        dockerfile: Dockerfile
+      depends_on:
+        - inventory-postgres
+      environment:
+        SPRING_PROFILES_ACTIVE: docker
+        SPRING_DATASOURCE_URL: jdbc:postgresql://payment-postgres:5432/paymentdb
+        SPRING_DATASOURCE_USERNAME: user
+        SPRING_DATASOURCE_PASSWORD: pwd3
+        SPRING_JPA_HIBERNATE_DDL_AUTO: update
+        EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+      ports:
+        - "8280:8080"
+      networks:
+        - eureka-network
 
-volumes:
-  order_pgdata:
-  inventory_pgdata:
-  payment_pgdata:
-  mongo_data:
+    mongo:
+      image: mongo:6.0
+      container_name: mongo_db
+      ports:
+        - "27017:27017"
+      volumes:
+        - mongo_data:/data/db
+      networks:
+        - eureka-network
 
-networks:
-  eureka-network:
-    driver: bridge
+    product-service:
+      container_name: product-service
+      build:
+        context: ./product
+        dockerfile: Dockerfile
+      depends_on:
+        - mongo
+      environment:
+        SPRING_PROFILES_ACTIVE: docker
+        SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/productdb
+        EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+      ports:
+        - "8380:8080"
+      networks:
+        - eureka-network
+
+    prometheus:
+      image: prom/prometheus
+      container_name: prometheus
+      ports:
+        - "9090:9090"
+      volumes:
+        - ./monitoring/prometheus.yaml:/etc/prometheus/prometheus.yml
+      networks:
+        - eureka-network
+      depends_on:
+        - api-gateway
+        - order-service
+        - inventory-service
+        - payment-service
+        - product-service
+
+    grafana:
+      image: grafana/grafana
+      container_name: grafana
+      ports:
+        - "3000:3000"
+      volumes:
+        - grafana_data:/var/lib/grafana
+      networks:
+        - eureka-network
+      depends_on:
+        - prometheus
+        - loki
+
+    loki:
+      image: grafana/loki:latest
+      container_name: loki
+      ports:
+        - "3100:3100"
+      volumes:
+        - ./monitoring/loki-config.yaml:/etc/loki/local-config.yaml
+      command:
+        -config.file=/etc/loki/local-config.yaml
+        -validation.allow-structured-metadata=false
+      networks:
+        - eureka-network
+
+    redis:
+      image: redis:alpine
+      container_name: redis
+      ports:
+        - "6379:6379"
+      networks:
+        - eureka-network
+      volumes:
+        - redis_data:/data/redis
+
+  volumes:
+    order_pgdata:
+    inventory_pgdata:
+    payment_pgdata:
+    mongo_data:
+    grafana_data:
+    redis_data:
+
+  networks:
+    eureka-network:
+      driver: bridge

@@ -12,14 +12,19 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder // Añadir Builder para facilitar la creación
 public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private UUID product;
+    private UUID productId; // Cambiado de 'product' a 'productId' por claridad
     private Integer quantity;
-    private String customerEmail;
-    private String status;
+    private String customerEmail; // Considera un UUID de cliente si tienes un servicio de usuarios
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    private java.math.BigDecimal totalAmount; // Es bueno guardar el monto calculado
 }

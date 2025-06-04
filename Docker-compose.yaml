@@ -184,18 +184,27 @@
         - prometheus
         - loki
 
+
     loki:
-      image: grafana/loki:latest
+      image: grafana/loki:2.9.4  # Versión específica probada
       container_name: loki
       ports:
         - "3100:3100"
       volumes:
+        - ./monitoring/loki-data:/tmp/loki  # Directorio persistente
         - ./monitoring/loki-config.yaml:/etc/loki/local-config.yaml
       command:
-        -config.file=/etc/loki/local-config.yaml
-        -validation.allow-structured-metadata=false
+        - -config.file=/etc/loki/local-config.yaml
+        - -target=all  # Ejecuta todos los componentes en un solo proceso
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:3100/ready"]
+        interval: 5s
+        timeout: 10s
+        retries: 20
+        start_period: 60s  # Da más tiempo para iniciar
       networks:
         - eureka-network
+
 
     redis:
       image: redis:alpine

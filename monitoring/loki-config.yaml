@@ -16,6 +16,12 @@ common:
     kvstore:
       store: inmemory
 
+ingester:
+  lifecycler:
+    min_ready_duration: 0s
+  chunk_idle_period: 5m
+  max_chunk_age: 30m
+
 schema_config:
   configs:
     - from: 2020-10-24
